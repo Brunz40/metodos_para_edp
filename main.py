@@ -38,11 +38,11 @@ for h in H:
     X,Y=np.meshgrid(x,y)
     malhas_exatas[h]=solução_analitica(X,Y)
 
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+
+    fig, (ax,ax2) = plt.subplots(ncols=2,subplot_kw={"projection": "3d"})
+
     ax.plot_surface(X, Y, malhas_exatas[h], cmap=cm.jet, linewidth=0, antialiased=False)
 
-    ax.set(xticklabels=[],
-           yticklabels=[],
-           zticklabels=[])
 
     plt.show()
