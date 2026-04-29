@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from scipy.sparse import diags
+from scipy.sparse.linalg import spsolve
 
 def derivada(x,h,func):
     return (func(x+h)-func(x-h))/(2*h)
@@ -20,13 +21,8 @@ h4=0.0125
 h5=0.00625
 H=[h1,h2,h3,h4,h5]
 
-malha_aprox1=np.zeros((10,20))
-malha_aprox2=np.zeros((20,40))
-malha_aprox3=np.zeros((40,80))
-malha_aprox4=np.zeros((80,160))
-malha_aprox5=np.zeros((160,320))
-
 malhas_exatas = {}
+malha_aprox={}
 erros={}
 for h in H:
     #criando a malha
@@ -62,9 +58,20 @@ for h in H:
     A = diags(
     [diagonal_principal, diag_sup, diag_inf, diag_longe_sup, diag_longe_inf],
     [0, 1, -1, len(x), -len(x)],shape=(Npontos, Npontos)).tocsr()
-
+    #
+    b = np.zeros(Npontos)
+    for i in range(nx):
+        g_x = -np.exp(1) * np.sin(2 * np.pi * x[i]) 
+        b[i] = -2 * h * g_x * (3 + constante * h / 2)
+    for j in range(len(y)):   
+        b[j*nx] = 0
+        b[j * nx + (nx-1)] = 0
+    for i in range(Npontos - nx, Npontos):
+        b[i] = 0
+    
+    malha_aprox[h]= spsolve(A, b).reshape((len(y), nx))
     fig, (ax,ax2) = plt.subplots(ncols=2,subplot_kw={"projection": "3d"})
 
     ax.plot_surface(X, Y, malhas_exatas[h], cmap=cm.jet, linewidth=0, antialiased=False)
-
+    ax2.plot_surface(X,Y,malha_aprox[h],cmap=cm.jet)
     plt.show()
