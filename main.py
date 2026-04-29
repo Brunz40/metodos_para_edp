@@ -36,19 +36,32 @@ for h in H:
 
     malhas_exatas[h]=solução_analitica(X,Y)
 
-    Npontos=(len(x)-1)*(len(y)+1)
+    Npontos=(len(x))*(len(y))
     #PONTOS INTERNOS
     diagonal_principal=-8*np.ones(Npontos)
     diag_sup=diag_inf=np.ones(Npontos-1)
-    diag_longe_sup=(3 - constante*h/2) * np.ones(len(x) -1 )
-    diag_longe_inf=(3 + constante*h/2) * np.ones(len(x) -1 )
+    diag_longe_sup=(3 - constante*h/2) * np.ones(Npontos-len(x) +1 )
+    diag_longe_inf=(3 + constante*h/2) * np.ones(Npontos-len(x) +1 )
     #pontos fronteiras y
     diagonal_principal[-len(x) +1:]-=2*h*(3 - constante*h/2)
     diag_sup[:len(x) -1]=diag_inf[-len(x) +1:]
     #ajuste de buraco pulando linha
-    for i in range(1, int(Npontos/nx)):
-        diag_sup[i*nx - 1] = 0
-        diag_inf[i*nx - 1] = 0
+    for i in range(1, int(Npontos/len(x))):
+        diag_sup[i*len(x) - 1] = 0
+        diag_inf[i*len(x) - 1] = 0
+    #fronteiras em x
+    nx=len(x)
+    for i in range(Npontos):
+        if i % len(x) == 0 or i % len(x) == len(x) - 1:
+            diagonal_principal[i] = 1
+            if i < Npontos - 1: diag_sup[i] = 0
+            if i > 0: diag_inf[i-1] = 0
+            if i < Npontos - nx: diag_longe_sup[i] = 0
+            if i >= nx: diag_longe_inf[i-nx] = 0
+    #montando matriz esparsa
+    A = diags(
+    [diagonal_principal, diag_sup, diag_inf, diag_longe_sup, diag_longe_inf],
+    [0, 1, -1, len(x), -len(x)],shape=(Npontos, Npontos)).tocsr()
 
     fig, (ax,ax2) = plt.subplots(ncols=2,subplot_kw={"projection": "3d"})
 
