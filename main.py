@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
-
+from scipy.sparse import diags
 
 def derivada(x,h,func):
     return (func(x+h)-func(x-h))/(2*h)
@@ -34,10 +34,21 @@ for h in H:
     y = np.linspace(-1, 1, int(2 / h))
     X,Y=np.meshgrid(x,y)
 
-
     malhas_exatas[h]=solução_analitica(X,Y)
 
-
+    Npontos=(len(x)-1)*(len(y)+1)
+    #PONTOS INTERNOS
+    diagonal_principal=-8*np.ones(Npontos)
+    diag_sup=diag_inf=np.ones(Npontos-1)
+    diag_longe_sup=(3 - constante*h/2) * np.ones(len(x) -1 )
+    diag_longe_inf=(3 + constante*h/2) * np.ones(len(x) -1 )
+    #pontos fronteiras y
+    diagonal_principal[-len(x) +1:]-=2*h*(3 - constante*h/2)
+    diag_sup[:len(x) -1]=diag_inf[-len(x) +1:]
+    #ajuste de buraco pulando linha
+    for i in range(1, int(Npontos/nx)):
+        diag_sup[i*nx - 1] = 0
+        diag_inf[i*nx - 1] = 0
 
     fig, (ax,ax2) = plt.subplots(ncols=2,subplot_kw={"projection": "3d"})
 
