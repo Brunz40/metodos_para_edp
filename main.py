@@ -69,31 +69,12 @@ for h in H:
     for i in range(Npontos - nx, Npontos):
         b[i] = 0
     
-    off_diag   = A - diags(diagonal_principal, 0)
- 
-    chute       = np.zeros(Npontos) 
-    max_iter = 50_000
-    tol      = 1e-8
- 
-    for k in range(0, max_iter):
-        u = (b - off_diag.dot(chute)) / diagonal_principal
- 
-        residuo = np.max(np.abs(u - chute))
-        chute = u
- 
-        if residuo < tol:
-            print(f"  Convergiu em {k} iterações  (resíduo = {residuo:.2e})")
-            iteracoes_por_malha[h] = k
-            break
-    
-    if(residuo>tol):
-        print(f" não convergiu após {max_iter} iterações (resíduo = {residuo:.2e})")
-
- 
-    malha_aprox[h] = u.reshape((len(y), nx))
+    malha_aprox[h] = spsolve(A, b).reshape(len(y),len(x))*(0.5/h)
 
     fig, (ax,ax2) = plt.subplots(ncols=2,subplot_kw={"projection": "3d"})
 
     ax.plot_surface(X, Y, malhas_exatas[h], cmap=cm.jet, linewidth=0, antialiased=False)
-    ax2.plot_surface(X,Y,malha_aprox[h],cmap=cm.jet)
+    ax2.plot_surface(X,Y,malha_aprox[h]-malhas_exatas[h],cmap=cm.jet)
+    erros[h]=np.sqrt(np.sum((malhas_exatas[h] - malha_aprox[h])**2) * h**2)
     plt.show()
+print(erros)
