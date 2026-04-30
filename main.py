@@ -78,3 +78,8 @@ for h in H:
     erros[h]=np.sqrt(np.sum((malhas_exatas[h] - malha_aprox[h])**2) * h**2)
     plt.show()
 print(erros)
+
+plt.loglog(H,list(erros.values()))
+plt.ylabel("norma do erro",fontsize=12)
+plt.xlabel('h')   
+plt.show()
