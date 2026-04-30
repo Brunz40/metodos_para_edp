@@ -20,14 +20,14 @@ h3=0.025
 h4=0.0125
 h5=0.00625
 H=[h1,h2,h3,h4,h5]
-
+iteracoes_por_malha = {}
 malhas_exatas = {}
 malha_aprox={}
 erros={}
 for h in H:
     #criando a malha
-    x=np.linspace(0,1,int(1/h))
-    y = np.linspace(-1, 1, int(2 / h))
+    x=np.linspace(0,1,int(1/h)+1)
+    y = np.linspace(-1, 1, int(2 / h)+1)
     X,Y=np.meshgrid(x,y)
 
     malhas_exatas[h]=solução_analitica(X,Y)
@@ -62,14 +62,36 @@ for h in H:
     b = np.zeros(Npontos)
     for i in range(nx):
         g_x = -np.exp(1) * np.sin(2 * np.pi * x[i]) 
-        b[i] = -2 * h * g_x * (3 + constante * h / 2)
+        b[i] = 2 * h * g_x * (3 + constante * h / 2)
     for j in range(len(y)):   
         b[j*nx] = 0
         b[j * nx + (nx-1)] = 0
     for i in range(Npontos - nx, Npontos):
         b[i] = 0
     
-    malha_aprox[h]= spsolve(A, b).reshape((len(y), nx))
+    off_diag   = A - diags(diagonal_principal, 0)
+ 
+    chute       = np.zeros(Npontos) 
+    max_iter = 50_000
+    tol      = 1e-8
+ 
+    for k in range(0, max_iter):
+        u = (b - off_diag.dot(chute)) / diagonal_principal
+ 
+        residuo = np.max(np.abs(u - chute))
+        chute = u
+ 
+        if residuo < tol:
+            print(f"  Convergiu em {k} iterações  (resíduo = {residuo:.2e})")
+            iteracoes_por_malha[h] = k
+            break
+    
+    if(residuo>tol):
+        print(f" não convergiu após {max_iter} iterações (resíduo = {residuo:.2e})")
+
+ 
+    malha_aprox[h] = u.reshape((len(y), nx))
+
     fig, (ax,ax2) = plt.subplots(ncols=2,subplot_kw={"projection": "3d"})
 
     ax.plot_surface(X, Y, malhas_exatas[h], cmap=cm.jet, linewidth=0, antialiased=False)
